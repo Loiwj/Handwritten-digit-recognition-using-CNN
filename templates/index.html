@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MNIST Digit Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: black;
+            border: 1px solid white;
+        }
+        p{
+            font-size: 2rem;
+        }
+        #predictedDigit{
+            font-size: 12rem;
+            display: block;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .btn{
+            font-size: 20px;
+            padding: 1rem;
+            border-radius: 1rem;
+            border: none;
+            background-color: blue;
+            color: white;
+            cursor: pointer;
+            
+        }
+        .btn-div{
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+    <h1>MNIST Digit Recognition</h1>
+    <div class="container">
+        <canvas id="drawingCanvas" width="280" height="280"></canvas>
+        <p>Dự đoán là số: <span id="predictedDigit"></span></p>
+
+    </div>
+    <div class="btn-div">
+        <button class="btn" onclick="predictDigit()">Nhận diện</button>
+    <button class="btn" onclick="refresh()">Làm mới</button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        let isDrawing = false;
+
+        canvas.addEventListener('mousedown', () => {
+            isDrawing = true;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+
+            context.lineWidth = 20;
+            context.lineCap = 'round';
+            context.strokeStyle = 'white';
+
+            context.lineTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        async function predictDigit() {
+            const imageData = canvas.toDataURL();
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ imageData }),
+            });
+
+            const data = await response.json();
+            document.getElementById('predictedDigit').textContent = data.predicted_class;
+        }
+        function refresh(){
+            //khởi tạo lại trang web
+            location.reload();
+        }
+    </script>
+</body>
+</html>
